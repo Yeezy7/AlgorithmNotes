@@ -87,27 +87,22 @@ vector<int> getNext(const string& p) {
 
 有了 `next` 数组，匹配逻辑就很简单了：
 
-```python
-def kmp_search(s, p):
-    n, m = len(s), len(p)
-    nxt = get_next(p)
-    i = 0  # 主串指针
-    j = 0  # 模式串指针
-    
-    while i < n and j < m:
-        if j == -1 or s[i] == p[j]:
-            # 当前字符匹配，或 j 已回溯到 -1（需重新开始）
-            i += 1
-            j += 1
-        else:
-            # 失配，i 不动，j 跳转到 next[j]
-            j = nxt[j]
-    
-    if j == m:
-        # 匹配成功，返回起始位置
-        return i - j
-    else:
-        return -1
+```c++
+int kmpSearch(const string& s, const string& p) {
+    int n = s.size(), m = p.size();
+    if (m == 0) return 0;
+    vector<int> nxt = getNext(p);   // 可替换为 getNextVal(p)
+    int i = 0, j = 0;
+    while (i < n && j < m) {
+        if (j == -1 || s[i] == p[j]) {
+            ++i; ++j;
+        } else {
+            j = nxt[j];
+        }
+    }
+    if (j == m) return i - j;
+    else return -1;
+}
 ```
 
 **演示匹配 `S = "ABCABCABD"` 和 `P = "ABCABD"`**：
@@ -134,21 +129,25 @@ def kmp_search(s, p):
 在计算 `next` 时，如果 `P[i] == P[next[i]]`，那么失配跳转后比较的字符还是一样，必然继续失配。我们可以直接把 `next[i]` 改成 `next[next[i]]`，这就是 `nextval` 优化。
 
 ```python
-def get_nextval(p):
-    m = len(p)
-    nxt = [-1] * m
-    i, j = 0, -1
-    while i < m - 1:
-        if j == -1 or p[i] == p[j]:
-            i += 1
-            j += 1
-            if p[i] != p[j]:
-                nxt[i] = j
-            else:
-                nxt[i] = nxt[j]  # 如果字符相同，直接继承
-        else:
-            j = nxt[j]
-    return nxt
+vector<int> getNextVal(const string& p) {
+    int m = p.size();
+    vector<int> nxt(m, -1);
+    int i = 0, j = -1;
+    while (i < m - 1) {
+        if (j == -1 || p[i] == p[j]) {
+            ++i; ++j;
+            // 优化点：如果跳转后的字符与当前失配字符相同，则继续向前跳转
+            if (p[i] != p[j]) {
+                nxt[i] = j;
+            } else {
+                nxt[i] = nxt[j];
+            }
+        } else {
+            j = nxt[j];
+        }
+    }
+    return nxt;
+}
 ```
 
 ### 6. 复杂度分析
